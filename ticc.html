@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SOS Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid #000;
+            background-color: #ffffff;
+        }
+
+        #game {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+            border: 1px solid #000;
+        }
+
+        .cell:nth-child(odd) {
+            background-color: #f9f9f9;
+        }
+
+        .cell:nth-child(even) {
+            background-color: #e0e0e0;
+        }
+
+        .winning-message {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            font-size: 30px;
+        }
+
+        .winning-message.show {
+            display: flex;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>SOS Game</h1>
+        <div id="game">
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+            <div class="cell" data-cell></div>
+        </div>
+        <div id="winning-message" class="winning-message">
+            <div data-winning-message-text></div>
+            <button id="restartButton">Restart</button>
+        </div>
+    </div>
+    <script>
+        const cells = document.querySelectorAll('[data-cell]');
+        const winningMessageElement = document.getElementById('winning-message');
+        const winningMessageTextElement = document.querySelector('[data-winning-message-text]');
+        const restartButton = document.getElementById('restartButton');
+        let currentPlayer = 'S';
+
+        startGame();
+
+        restartButton.addEventListener('click', startGame);
+
+        function startGame() {
+            currentPlayer = 'S';
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.removeEventListener('click', handleClick);
+                cell.addEventListener('click', handleClick, { once: true });
+            });
+            winningMessageElement.classList.remove('show');
+        }
+
+        function handleClick(e) {
+            const cell = e.target;
+            cell.textContent = currentPlayer;
+            if (checkWin()) {
+                endGame(false);
+            } else if (isDraw()) {
+                endGame(true);
+            } else {
+                swapTurns();
+            }
+        }
+
+        function endGame(draw) {
+            if (draw) {
+                winningMessageTextElement.innerText = 'Draw!';
+            } else {
+                winningMessageTextElement.innerText = `${currentPlayer} Wins!`;
+            }
+            winningMessageElement.classList.add('show');
+        }
+
+        function isDraw() {
+            return [...cells].every(cell => {
+                return cell.textContent === 'S' || cell.textContent === 'O';
+            });
+        }
+
+        function swapTurns() {
+            currentPlayer = currentPlayer === 'S' ? 'O' : 'S';
+        }
+
+        function checkWin() {
+            const winningCombinations = [
+                [0, 1, 2],
+                [3, 4, 5],
+                [6, 7, 8],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [0, 4, 8],
+                [2, 4, 6]
+            ];
+
+            return winningCombinations.some(combination => {
+                return combination.every(index => {
+                    const cell = cells[index].textContent;
+                    return (cell === currentPlayer);
+                }) && checkSOS(combination);
+            });
+        }
+
+        function checkSOS(combination) {
+            const [a, b, c] = combination.map(index => cells[index].textContent);
+            return (a === 'S' && b === 'O' && c === 'S') || (c === 'S' && b === 'O' && a === 'S');
+        }
+    </script>
+</body>
+</html>
